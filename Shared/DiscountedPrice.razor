@@ -1,0 +1,22 @@
+﻿@inject AppState AppState
+
+
+<h4 class="card-title">Price: <span style="text-decoration: line-through;">@Price</span> <span style="color:@AppState.CssColors["green"];">@Discounted</span> (<span style="color:@AppState.CssColors["red"];">-@DiscountPercentage%</span>)</h4>
+<h5 class="alert alert-warning">Promotion valid until @DiscountedUntil?.ToString()</h5>
+
+
+
+@code {
+    [Parameter]
+    public string Price { get; set; }
+
+    [Parameter]
+    public string Discounted { get; set; }
+
+    [Parameter]
+    public int DiscountPercentage { get; set; }
+
+    [Parameter]
+    public DateTime? DiscountedUntil { get; set; }
+
+}

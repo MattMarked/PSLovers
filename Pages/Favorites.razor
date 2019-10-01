@@ -1,0 +1,108 @@
+﻿@page "/favorites"
+@using PSLovers2.Data;
+@using PSLovers2.Services;
+
+
+@inject IJSRuntime JsRuntime;
+@inject AppState AppState;
+@inject FavoriteService favoriteService;
+
+
+
+<div class="row">
+    @if (IsLoading)
+    {
+        <LoadingGif></LoadingGif>
+    }
+    else if (UserFavorites != null)
+    {
+        <AuthorizeView>
+            <Authorized>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-dark">
+                        <thead>
+                            <tr>
+                                <th scope="col">Game</th>
+                                <th scope="col"></th>
+                                <th scope="col">Current discounted price</th>
+                                <th scope="col">% of discount</th>
+                                <th scope="col">Discounted until</th>
+                                <th scope="col">Original price</th>
+                                <th scope="col">Actions</th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fav in UserFavorites.OrderByDescending(x=>x.DiscountPercentage))
+                            {
+                                var color = fav.DiscountPercentage > 0 ? "text-success " : "";
+
+                                <tr>
+                                    <th class="align-middle" style="max-width:75px;">
+                                        <img src="@fav.GameImage" class="img-fluid rounded mx-auto d-block" alt="image for the game @fav.GameName">
+                                    </th>
+                                    <td class="align-middle"><h5>@fav.GameName</h5></td>
+                                    <td class="align-middle text-center"><h4 class="@color">@fav.GameCurrentPrice</h4></td>
+                                    <td class="align-middle text-center"><span class="@color">@fav.DiscountPercentage %</span></td>
+                                    <td class="align-middle text-center"><span class="@color">@fav.DiscountedUntil?.ToShortDateString()</span></td>
+                                    <td class="align-middle text-center">@fav.GamePastPrice</td>
+                                    <td class="align-middle text-center">
+                                        <a class="btn btn-primary" href="/detail/@fav.GameId" style="margin-right:10px;">View details</a>
+                                        <FavoriteButton country="IT" GameId="@fav.GameId" GameUrl="@fav.GameUrl" Lang="it" IsFavorite="false"></FavoriteButton>
+                                    </td>
+
+                                </tr>
+                            }
+
+
+
+                        </tbody>
+                    </table>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="alert-danger"><h3>You are not logged in!</h3></div>
+            </NotAuthorized>
+        </AuthorizeView>
+    }
+</div>
+
+
+@code{
+    IEnumerable<Favorite> UserFavorites;
+    public bool IsLoading { get; set; }
+
+    [CascadingParameter]
+    private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState> authenticationStateTask { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.OnChange += StateHasChanged;
+        await FetchFavorites();
+    }
+
+    public async Task FetchFavorites()
+    {
+
+        IsLoading = true;
+        StateHasChanged();
+
+        var user = (await authenticationStateTask).User;
+        var serviceOutput = await favoriteService.CompleteFavoriteListForUser(user.Identity.Name, "it", "IT");
+        if (serviceOutput.Success)
+        {
+            UserFavorites = serviceOutput.Result;
+            IsLoading = false;
+        }
+        else
+        {
+            IsLoading = false;
+            AppState.SetToast(serviceOutput.ErrorMessage, "errore");
+            StateHasChanged();
+            await JsRuntime.InvokeAsync<string>("DisplayToast");
+        }
+    }
+
+
+
+}

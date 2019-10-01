@@ -1,0 +1,22 @@
+﻿<AuthorizeView>
+    <Authorized>
+        <li class="nav-item px-3">
+            <span class="nav-link">Hello, @context.User.Identity.Name!</span>
+        </li>
+        <li class="nav-item px-3">
+            <form method="post" action="Identity/Account/LogOut" class="nav-link">
+                <button type="submit" class="nav-link btn btn-link"><span class="oi oi-account-logout"></span> Log out</button>
+            </form>
+        </li>  
+    </Authorized>
+    <NotAuthorized>
+        <li class="nav-item px-3">
+            <a href="Identity/Account/Register" class="nav-link"><span class="oi oi-copywriting"></span> Register</a>
+
+        </li>
+        <li class="nav-item px-3">
+            <a href="Identity/Account/Login" class="nav-link"><span class="oi oi-account-login"></span> Log in</a>
+
+        </li>
+    </NotAuthorized>
+</AuthorizeView>

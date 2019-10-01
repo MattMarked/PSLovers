@@ -1,0 +1,119 @@
+﻿@page "/manage/users"
+@using PSLovers2.Data;
+@using PSLovers2.Services;
+@using Microsoft.AspNetCore.Identity;
+
+
+
+@inject IJSRuntime JsRuntime;
+@inject AppState AppState;
+@inject ManageService manageService;
+@inject NavigationManager NavigationManager;
+
+
+
+<div class="row">
+    @if (IsLoading)
+    {
+        <LoadingGif></LoadingGif>
+    }
+    else if (Users != null)
+    {
+        <AuthorizeView>
+            <Authorized>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-dark">
+                        <thead>
+                            <tr>
+                                <th scope="col">email</th>
+                                <th></th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Users)
+                            {
+
+
+                                <tr>
+                                    <td>@user.Email</td>
+                                    <td>
+                                        <button type="button" @onclick="@(() => DeleteUser(user.Id))"><i class="oi oi-minus "></i></button>
+                                    </td>
+                                </tr>
+                            }
+
+
+
+                        </tbody>
+                    </table>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="alert-danger"><h3>You are not logged in!</h3></div>
+            </NotAuthorized>
+        </AuthorizeView>
+    }
+</div>
+
+
+@code{
+    IEnumerable<IdentityUser> Users;
+    public bool IsLoading { get; set; }
+
+    [CascadingParameter]
+    private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState> authenticationStateTask { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await authenticationStateTask).User;
+        if (user.Identity.Name != "mattiamarchiani@gmail.com")
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        AppState.OnChange += StateHasChanged;
+        await FetchUsers();
+    }
+
+    public async Task FetchUsers()
+    {
+
+        IsLoading = true;
+        StateHasChanged();
+
+        var user = (await authenticationStateTask).User;
+        var serviceOutput = await manageService.GetAllUser();
+        if (serviceOutput.Success)
+        {
+            Users = serviceOutput.Result;
+            IsLoading = false;
+        }
+        else
+        {
+            IsLoading = false;
+            AppState.SetToast(serviceOutput.ErrorMessage, "errore");
+            StateHasChanged();
+            await JsRuntime.InvokeAsync<string>("DisplayToast");
+        }
+    }
+
+    private async Task DeleteUser(string userId)
+    {
+        var serviceOutput = await manageService.DeleteUser(userId);
+        if (serviceOutput.Success)
+        {
+            Users = Users.Where(x => x.Id != userId);
+            IsLoading = false;
+        }
+        else
+        {
+            IsLoading = false;
+            AppState.SetToast(serviceOutput.ErrorMessage, "errore");
+            StateHasChanged();
+            await JsRuntime.InvokeAsync<string>("DisplayToast");
+        }
+    }
+
+
+
+}

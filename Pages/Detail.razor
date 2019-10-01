@@ -1,0 +1,97 @@
+﻿@page "/detail/{gameId}"
+@using PSLovers2.Data;
+@using PSLovers2.Services;
+
+
+@inject IJSRuntime JsRuntime;
+@inject AppState AppState;
+@inject FetchService fetchService;
+
+
+
+<div class="row">
+    @if (IsLoading)
+    {
+        <LoadingGif></LoadingGif>
+    }
+    else if (game != null)
+    {
+        <div class="col-12"></div>
+        <div class="col-lg-4 col-md-6 ">
+            <div class="card">
+                @if (!String.IsNullOrEmpty(game.Preview))
+                {
+                    <video controls class="embed-responsive card-image-top" autoplay>
+                        <source class="embed-responsive-item" src="@game.Preview" type="video/mp4" />
+                    </video>
+                }
+                <div class="card-body">
+
+                    @if (game.DiscountPercentage == 0)
+                    {
+                        <h4 class="card-title">Price: @game.Price</h4>
+                    }
+                    else
+                    {
+                        <DiscountedPrice Discounted="@game.DiscountedPrice" DiscountedUntil="@game.DiscountedUntil" DiscountPercentage="@game.DiscountPercentage" Price="@game.Price"></DiscountedPrice>
+                    }
+                    <p class="card-text">
+                        <br />
+                        Playable platforms: @game.Platforms
+
+                    </p>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-lg-8 col-md-6 ">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="card-title">@game.Name</h1>
+                    <hr />
+                    <h3>Rating: <RepeatedStar DecimalRating="@game.StarAverageScore" Number="@Convert.ToInt32(Math.Round(decimal.Parse(game.StarAverageScore.Replace(".",","))))" Count="@int.Parse(game.StarCountTotal)" ShowTotalLabel="true"></RepeatedStar></h3>
+                    <div class="rating">
+                        @foreach (var star in game.Stars.OrderByDescending(x => x.Item1))
+                        {
+                            <RepeatedStar Number="@star.Item1" Count="@star.Item2" ShowTotalLabel="false"></RepeatedStar>
+                            <br />
+                        }
+                    </div>
+                </div>
+                <div class="card-body">@((MarkupString)game.Desc)</div>
+            </div>
+        </div>
+    }
+</div>
+
+
+@code{
+    GameDetail game;
+    public string gameUrl { get; set; }
+    [Parameter]
+    public string gameId { get; set; }
+    public bool IsLoading { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        IsLoading = true;
+        StateHasChanged();
+        fetchService.Initialize("IT", "it");
+        var serviceOutput = await fetchService.FetchGameDetails(gameId, gameUrl);
+        if (serviceOutput.Success)
+        {
+            game = serviceOutput.Result;
+            IsLoading = false;
+        }
+        else
+        {
+            IsLoading = false;
+            AppState.SetToast(serviceOutput.ErrorMessage, "errore");
+            StateHasChanged();
+            await JsRuntime.InvokeAsync<string>("DisplayToast");
+        }
+    }
+
+}

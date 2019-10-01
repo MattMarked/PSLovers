@@ -1,0 +1,36 @@
+﻿@inject AppState AppState
+
+
+@for (int i = 0; i < 5; i++)
+{
+    if (i < Number)
+    {
+        CssColor = AppState.CssColors["yellow"];
+    }
+    else
+    {
+        CssColor = "inherit";
+
+    }
+    <span class="oi oi-star" aria-hidden="true" style="color: @CssColor"></span>
+
+}
+
+<b> @(ShowTotalLabel ? $"{DecimalRating} average rate on {Count} total votes" : $"{Count}")</b>
+
+
+@code {
+    [Parameter]
+    public int Number { get; set; }
+
+    [Parameter]
+    public int Count { get; set; }
+
+    [Parameter]
+    public bool ShowTotalLabel { get; set; }
+
+    [Parameter]
+    public string DecimalRating { get; set; }
+
+    public string CssColor { get; set; }
+}

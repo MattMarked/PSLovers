@@ -1,0 +1,71 @@
+﻿@page "/"
+@page "/deals/"
+@using PSLovers2.Data;
+@using PSLovers2.Services;
+
+@inject IJSRuntime JsRuntime;
+@inject AppState AppState;
+@inject FetchService fetchService;
+
+
+<h1>Hello, PSLovers!</h1>
+<h2>Deals of the week!</h2>
+<div class="row">
+    @if (games != null && games.Any() && !IsLoading)
+    {
+        foreach (var game in games.OrderByDescending(x => x.DiscountPercentage).ThenByDescending(x => x.Price))
+        {
+            <div class="col-xl-3 col-lg-4 col-md-6 ">
+                <GameCard Game="@game"></GameCard>
+            </div>
+        }
+    }
+    else if (!IsLoading)
+    {
+        <div class="col-12"><p>No deals this week</p></div>
+    }
+    @if (IsLoading)
+    {
+        <LoadingGif></LoadingGif>
+
+    }
+</div>
+
+@code{
+    IEnumerable<Game> games;  
+    public bool IsLoading { get; set; }
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FetchGames();
+        await base.OnInitializedAsync();
+        
+    }
+
+   
+
+
+    public async Task FetchGames()
+    {
+        fetchService.Initialize("IT", "it");
+        IsLoading = true;
+        StateHasChanged();
+        var serviceOutput = await fetchService.DealsOfTheWeek();
+        if (serviceOutput.Success)
+        {
+            games = serviceOutput.Result;
+            IsLoading = false;
+            StateHasChanged();
+
+        }
+        else
+        {
+            IsLoading = false;
+            AppState.SetToast(serviceOutput.ErrorMessage, "errore");
+            StateHasChanged();
+            await JsRuntime.InvokeAsync<string>("DisplayToast");
+        }
+    }
+}

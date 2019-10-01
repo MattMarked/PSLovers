@@ -1,0 +1,65 @@
+﻿<div class="top-row pl-4 navbar navbar-dark">
+    <a class="navbar-brand" href=""></a>
+    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+<div class="@NavMenuCssClass" >
+    <ul class="nav flex-column">
+        <li class="nav-item px-3"><img src="/img/psloverslogo.png" class="img-fluid mx-auto d-block" /></li>
+        @if (!collapseNavMenu)
+        {
+            <LoginDisplayCollapsible></LoginDisplayCollapsible>
+        }
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" Match="NavLinkMatch.All" href="">
+                <span class="oi oi-dollar" aria-hidden="true"></span> Last price drops
+            </NavLink>
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="search">
+                <span class="oi oi-magnifying-glass" aria-hidden="true"></span> Search
+            </NavLink>
+        </li>
+        <AuthorizeView>
+            <Authorized>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="favorites">
+                        <span class="oi oi-heart" aria-hidden="true"></span> Fav List
+                    </NavLink>
+                </li>
+
+            </Authorized>
+
+        </AuthorizeView>
+
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="offers">
+                <span class="oi oi-tag" aria-hidden="true"></span> Offers
+            </NavLink>
+        </li>
+        <AuthorizeView>
+            <Authorized>
+                <hr />
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Identity/Account/Manage">
+                        <span class="oi oi-person" aria-hidden="true"></span> Your profile
+                    </NavLink>
+                </li>
+            </Authorized>
+        </AuthorizeView>
+
+    </ul>
+</div>
+
+@code {
+    bool collapseNavMenu = true;
+
+    string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

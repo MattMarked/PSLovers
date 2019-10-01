@@ -1,0 +1,116 @@
+﻿@using PSLovers2.Data;
+@using PSLovers2.Services;
+
+@inject IJSRuntime JsRuntime;
+@inject AppState AppState;
+@inject FavoriteService favoriteService;
+
+<AuthorizeView>
+    <Authorized>
+        <button type="button" @onclick="AddRemoveFavorite" class="btn btn-outline-@Color" data-toggle="tooltip" data-placement="top" title="@TooltipText" data-original-title="@TooltipText"><i class="oi oi-heart text-@Color"></i></button>
+    </Authorized>
+    <NotAuthorized>
+        <button type="button" class="btn btn-outline-secondary " data-toggle="tooltip" data-placement="top" title="Login to add to favorite" style="cursor:not-allowed;"><span class="oi oi-heart"></span></button>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+
+    //context.User.Identity.Name
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    [Parameter]
+    public string GameId { get; set; }
+    [Parameter]
+    public string GameUrl { get; set; }
+    [Parameter]
+    public string Lang { get; set; }
+    [Parameter]
+    public string Country { get; set; }
+    [Parameter]
+    public bool IsFavorite { get; set; }
+
+    public int? FavoriteId { get; private set; }
+
+    string Color { get { return IsFavorite ? "danger" : "info"; } }
+    string TooltipText { get { return !IsFavorite ? "Add to favorites!" : "Remove from favorites"; } }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.OnChange += StateHasChanged;
+        var user = (await authenticationStateTask).User;
+        if (user.Identity.IsAuthenticated)
+        {
+            var serviceOutput = await favoriteService.IsFavorite(GameId, user.Identity.Name);
+            if (serviceOutput.Success)
+            {
+                if (serviceOutput.Result > 0)
+                {
+                    FavoriteId = serviceOutput.Result;
+                    IsFavorite = true;
+                }
+            }
+        }
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JsRuntime.InvokeAsync<string>("UpdateTooltip");
+    }
+
+    private async Task AddRemoveFavorite()
+    {
+        var user = (await authenticationStateTask).User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            AppState.SetToast("Non sei loggato, non puoi aggiungere preferiti", "errore");
+            StateHasChanged();
+            await JsRuntime.InvokeAsync<string>("DisplayToast");
+        }
+        else
+        {
+            if (IsFavorite && FavoriteId.HasValue)
+            {
+                var serviceOutputR = await favoriteService.RemoveFavorite(user.Identity.Name, FavoriteId.Value);
+                if (!serviceOutputR.Success)
+                {
+                    AppState.SetToast(serviceOutputR.ErrorMessage, "errore");
+                    StateHasChanged();
+                    await JsRuntime.InvokeAsync<string>("DisplayToast");
+                }
+                else
+                {
+                    FavoriteId = null;
+                    IsFavorite = false;
+                    AppState.SetToast("Removed from favorites", "info");
+                    StateHasChanged();
+                    await JsRuntime.InvokeAsync<string>("DisplayToast");
+                    await JsRuntime.InvokeAsync<string>("UpdateTooltip");
+                }
+            }
+            else
+            {
+                var serviceOutput = await favoriteService.AddFavorite(user.Identity.Name, GameId, GameUrl, Lang, Country);
+                if (!serviceOutput.Success)
+                {
+                    AppState.SetToast(serviceOutput.ErrorMessage, "errore");
+                    StateHasChanged();
+                    await JsRuntime.InvokeAsync<string>("DisplayToast");
+                }
+                else
+                {
+                    FavoriteId = serviceOutput.Result;
+                    IsFavorite = true;
+                    AppState.SetToast("Added to favorites", "info");
+                    StateHasChanged();
+                    await JsRuntime.InvokeAsync<string>("DisplayToast");
+                    await JsRuntime.InvokeAsync<string>("UpdateTooltip");
+                }
+            }
+
+        }
+    }
+}
+

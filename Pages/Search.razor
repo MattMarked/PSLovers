@@ -1,0 +1,105 @@
+﻿@page "/search/"
+@using PSLovers2.Data;
+@using PSLovers2.Services;
+
+@inject IJSRuntime JsRuntime;
+@inject AppState AppState;
+@inject FetchService fetchService;
+
+
+<h1>Hello, PSLovers!</h1>
+<div class="row d-flex">
+    <div class="form-inline mx-2 flex-grow-1">
+        <label class="sr-only" for="searchGame">Search games</label>
+        <div class="input-group mb-2 mr-sm-2 flex-grow-1">
+            <div class="input-group-prepend">
+                <div class="input-group-text">@@</div>
+            </div>
+            <input type="text" class="form-control" id="searchGame" @bind="@query" placeholder="Search for a game (at least 4 letters).." />
+        </div>
+
+        <button type="submit" class="btn btn-primary mb-2" @onclick="FetchGames">Search!</button>
+    </div>
+
+    <div class="form-check form-check-inline  mx-4">
+        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" checked="@(contentType == 2)" @onclick="@(e => SetContent(2))"  />
+        <label class="form-check-label" for="inlineRadio2">Only games</label>
+    </div>
+    <div class="form-check form-check-inline mx-4">
+        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio3" checked="@(contentType == 3)" @onclick="@(e => SetContent(3))" />
+        <label class="form-check-label" for="inlineRadio3">Only add-ons</label>
+    </div>
+    <div class="form-check form-check-inline mx-4">
+        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" checked="@(contentType == 1)" @onclick="@(e => SetContent(1))" />
+        <label class="form-check-label" for="inlineRadio1">Any</label>
+    </div>
+
+</div>
+<div class="row">
+    @if (games != null && games.Any() && !IsLoading)
+    {
+        foreach (var game in games.OrderByDescending(x => x.DiscountPercentage).ThenByDescending(x => x.Price))
+        {
+            <div class="col-xl-3 col-lg-4 col-md-6 ">
+                <GameCard Game="@game"></GameCard>
+            </div>
+        }
+    }
+    else if (!IsLoading)
+    {
+        <div class="col-12"><p>@Label</p></div>
+    }
+    @if (IsLoading)
+    {
+        <LoadingGif></LoadingGif>
+
+    }
+</div>
+
+@code{
+    IEnumerable<Game> games;
+    public string query { get; set; }
+    public int contentType { get; set; }
+    public bool IsLoading { get; set; }
+    public string Label {get;set;}
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        contentType = 2;
+        Label = "";
+    }
+
+    public async Task SetContent(int content)
+    {
+
+        contentType = content;
+        await FetchGames().ConfigureAwait(false);
+
+    }
+
+
+    public async Task FetchGames()
+    {
+        Label = "No Games found!";
+        fetchService.Initialize("IT", "it", contentType);
+        IsLoading = true;
+        StateHasChanged();
+        var serviceOutput = await fetchService.FetchGames(query);
+        if (serviceOutput.Success)
+        {
+            games = serviceOutput.Result;
+            IsLoading = false;
+            StateHasChanged();
+
+        }
+        else
+        {
+            IsLoading = false;
+            AppState.SetToast(serviceOutput.ErrorMessage, "errore");
+            StateHasChanged();
+            await JsRuntime.InvokeAsync<string>("DisplayToast");
+        }
+    }
+}

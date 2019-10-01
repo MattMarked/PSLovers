@@ -1,0 +1,38 @@
+﻿@using PSLovers2.Data
+
+
+<div class="card m-2">
+    <img class="card-img-top" src="@Game.Image" alt="Card image cap">
+    <div class="card-body">
+        <h5 class="card-title">@Game.Name</h5>
+        @if (Game.DiscountPercentage == 0)
+        {
+            <h4 class="card-title">Price: @Game.Price</h4>
+
+        }
+        else
+        {
+            <DiscountedPrice Discounted="@Game.DiscountedPrice" DiscountedUntil="@Game.DiscountedUntil" DiscountPercentage="@Game.DiscountPercentage" Price="@Game.Price"></DiscountedPrice>
+
+        }
+        <p class="card-text">
+            Type: @Game.GameContentType
+            <br />
+            Playable platforms: @Game.Platforms
+        </p>
+        <div class="row">
+            <div class="col-6"><a href="/detail/@Game.Id" class="btn btn-primary">Go to detail</a></div>
+            <div class="col-6 text-right"><FavoriteButton country="IT" GameId="@Game.Id" GameUrl="@Game.Url" Lang="it" IsFavorite="false"></FavoriteButton></div>
+        </div>
+    </div>
+    <div class="card-footer">
+        <p class="card-text">
+            Published by @Game.ProviderName
+        </p>
+    </div>
+</div>
+@code {
+    [Parameter]
+    public Game Game { get; set; }
+
+}
