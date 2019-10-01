@@ -10,7 +10,7 @@ namespace PSLovers2
         public string ToastMessage { get; private set; }
         public string ToastType { get; private set; }
 
-        public event Action OnChange;
+        public event Action OnChange; 
 
         public Dictionary<string, string> CssColors = new Dictionary<string, string>() {
             { "orange", "#fec771" },
