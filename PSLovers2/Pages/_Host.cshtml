@@ -10,10 +10,21 @@
     <title>PSLovers - Keep track of your favorite games on the Ps store and get notified when they're discounted!</title>
     <base href="~/" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
-    
-    <link href="css/cosmo.css" rel="stylesheet" asp-append-version="true"/>
-    <link href="css/site.css" rel="stylesheet" asp-append-version="true"/>
+
+    <link href="css/cosmo.css" rel="stylesheet" asp-append-version="true" />
+    <link href="css/site.css" rel="stylesheet" asp-append-version="true" />
     <link href="css/helix-loading.css" rel="stylesheet" />
+
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+
+
 </head>
 <body>
     <app>
@@ -36,7 +47,9 @@
         }
         function UpdateTooltip() {
             $('[data-toggle="tooltip"]').tooltip();
-
+        }
+        function HideTooltips() {
+             $('[data-toggle="tooltip"]').tooltip('hide');
         }
 
     </script>

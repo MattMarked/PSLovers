@@ -10,6 +10,8 @@ namespace PSLovers2
         public string ToastMessage { get; private set; }
         public string ToastType { get; private set; }
 
+        public string LastQuery { get; private set; }
+
         public event Action OnChange; 
 
         public Dictionary<string, string> CssColors = new Dictionary<string, string>() {
@@ -24,6 +26,11 @@ namespace PSLovers2
             ToastMessage = message;
             ToastType = type;
             NotifyStateChanged();
+        }
+
+        public void SetLastQuery(string query)
+        {
+            LastQuery = query;
         }
 
         private void NotifyStateChanged() => OnChange?.Invoke();

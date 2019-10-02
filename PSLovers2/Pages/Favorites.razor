@@ -48,7 +48,7 @@
                                     <td class="align-middle text-center">@fav.GamePastPrice</td>
                                     <td class="align-middle text-center">
                                         <a class="btn btn-primary" href="/detail/@fav.GameId" style="margin-right:10px;">View details</a>
-                                        <FavoriteButton country="IT" GameId="@fav.GameId" GameUrl="@fav.GameUrl" Lang="it" IsFavorite="false"></FavoriteButton>
+                                        <FavoriteButton country="IT" GameId="@fav.GameId" GameUrl="@fav.GameUrl" Lang="it" IsFavorite="true" GameName="@fav.GameName" OnClick="@(e => RemoveFavorite(fav.GameId))"></FavoriteButton>
                                     </td>
 
                                 </tr>
@@ -69,7 +69,7 @@
 
 
 @code{
-    IEnumerable<Favorite> UserFavorites;
+    IEnumerable<Data.Favorite> UserFavorites;
     public bool IsLoading { get; set; }
 
     [CascadingParameter]
@@ -77,9 +77,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        AppState.OnChange += StateHasChanged;
         await FetchFavorites();
+        AppState.OnChange += StateHasChanged;
     }
+
+
 
     public async Task FetchFavorites()
     {
@@ -103,6 +105,11 @@
         }
     }
 
+    public async Task RemoveFavorite(string gameId)
+    {
+        UserFavorites = UserFavorites.Where(x => x.GameId != gameId);
+        await JsRuntime.InvokeAsync<string>("HideTooltips");
 
+    }
 
 }

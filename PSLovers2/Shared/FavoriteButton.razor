@@ -29,8 +29,11 @@
     public string Country { get; set; }
     [Parameter]
     public bool IsFavorite { get; set; }
-
+    [Parameter]
+    public string GameName { get; set; }
     public int? FavoriteId { get; private set; }
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
 
     string Color { get { return IsFavorite ? "danger" : "info"; } }
     string TooltipText { get { return !IsFavorite ? "Add to favorites!" : "Remove from favorites"; } }
@@ -59,8 +62,8 @@
         await JsRuntime.InvokeAsync<string>("UpdateTooltip");
     }
 
-    private async Task AddRemoveFavorite()
-    {
+    private async Task AddRemoveFavorite(MouseEventArgs e)
+    {        
         var user = (await authenticationStateTask).User;
 
         if (!user.Identity.IsAuthenticated)
@@ -84,10 +87,11 @@
                 {
                     FavoriteId = null;
                     IsFavorite = false;
-                    AppState.SetToast("Removed from favorites", "info");
+                    AppState.SetToast($"{GameName} removed from favorites", "info");
                     StateHasChanged();
                     await JsRuntime.InvokeAsync<string>("DisplayToast");
                     await JsRuntime.InvokeAsync<string>("UpdateTooltip");
+                    
                 }
             }
             else
@@ -103,7 +107,7 @@
                 {
                     FavoriteId = serviceOutput.Result;
                     IsFavorite = true;
-                    AppState.SetToast("Added to favorites", "info");
+                    AppState.SetToast($"{GameName} added to favorites", "info");
                     StateHasChanged();
                     await JsRuntime.InvokeAsync<string>("DisplayToast");
                     await JsRuntime.InvokeAsync<string>("UpdateTooltip");
@@ -111,6 +115,8 @@
             }
 
         }
+
+        await OnClick.InvokeAsync(e);
     }
 }
 

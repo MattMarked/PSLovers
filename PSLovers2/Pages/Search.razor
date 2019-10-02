@@ -8,6 +8,12 @@
 
 
 <h1>Hello, PSLovers!</h1>
+@if (ShowAlert)
+{
+    <div class="alert alert-warning" role="alert">
+        Insert at least 4 letters here <span class="oi oi-arrow-thick-bottom"></span>
+    </div>
+}
 <div class="row d-flex">
     <div class="form-inline mx-2 flex-grow-1">
         <label class="sr-only" for="searchGame">Search games</label>
@@ -22,7 +28,7 @@
     </div>
 
     <div class="form-check form-check-inline  mx-4">
-        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" checked="@(contentType == 2)" @onclick="@(e => SetContent(2))"  />
+        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" checked="@(contentType == 2)" @onclick="@(e => SetContent(2))" />
         <label class="form-check-label" for="inlineRadio2">Only games</label>
     </div>
     <div class="form-check form-check-inline mx-4">
@@ -61,14 +67,20 @@
     public string query { get; set; }
     public int contentType { get; set; }
     public bool IsLoading { get; set; }
-    public string Label {get;set;}
-
+    public string Label { get; set; }
+    public bool ShowAlert { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         contentType = 2;
+        ShowAlert = false;
         Label = "";
+        if (!String.IsNullOrEmpty(AppState.LastQuery))
+        {
+            query = AppState.LastQuery;
+            await FetchGames();
+        }
     }
 
     public async Task SetContent(int content)
@@ -82,24 +94,34 @@
 
     public async Task FetchGames()
     {
-        Label = "No Games found!";
-        fetchService.Initialize("IT", "it", contentType);
-        IsLoading = true;
-        StateHasChanged();
-        var serviceOutput = await fetchService.FetchGames(query);
-        if (serviceOutput.Success)
+        if (query?.Length > 3)
         {
-            games = serviceOutput.Result;
-            IsLoading = false;
+            AppState.SetLastQuery(query);
+            ShowAlert = false;
+            Label = "No Games found!";
+            fetchService.Initialize("IT", "it", contentType);
+            IsLoading = true;
             StateHasChanged();
+            var serviceOutput = await fetchService.FetchGames(query);
+            if (serviceOutput.Success)
+            {
+                games = serviceOutput.Result;
+                IsLoading = false;
+                StateHasChanged();
 
+            }
+            else
+            {
+                IsLoading = false;
+                AppState.SetToast(serviceOutput.ErrorMessage, "errore");
+                StateHasChanged();
+                await JsRuntime.InvokeAsync<string>("DisplayToast");
+            }
         }
         else
         {
-            IsLoading = false;
-            AppState.SetToast(serviceOutput.ErrorMessage, "errore");
-            StateHasChanged();
-            await JsRuntime.InvokeAsync<string>("DisplayToast");
+            ShowAlert = true;
         }
+
     }
 }

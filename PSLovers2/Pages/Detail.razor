@@ -25,6 +25,11 @@
                         <source class="embed-responsive-item" src="@game.Preview" type="video/mp4" />
                     </video>
                 }
+                else
+                {
+                    <img class="card-img-top" src="@game.Image" alt="Card image cap">
+
+                }
                 <div class="card-body">
 
                     @if (game.DiscountPercentage == 0)
@@ -40,6 +45,13 @@
                         Playable platforms: @game.Platforms
 
                     </p>
+                </div>
+            </div>
+            <div class="card my-2">
+                <div class="card-body">
+                    <NavLink class="btn btn-info" href="search">
+                        <span class="oi oi-magnifying-glass" aria-hidden="true"></span> Go back to your last search
+                    </NavLink>
                 </div>
             </div>
 

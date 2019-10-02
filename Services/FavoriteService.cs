@@ -27,7 +27,7 @@ namespace PSLovers2.Services
             CachedFavorites = new HashSet<(string GameId, int FavoriteId, string GameUrl)>();
         }
 
-        private (string, int, string) ReturnTupleFromFav(Favorite favorite) => (favorite.GameId, favorite.Id, favorite.GameUrl);
+        private (string, int, string) ReturnTupleFromFav(FavoriteForUser ffu) => (ffu.Favorite.GameId, ffu.Id, ffu.Favorite.GameUrl);
 
         public async ValueTask<HashSet<(string GameId, int FavoriteId, string GameUrl)>> FavoriteForUser(string email)
         {
@@ -38,7 +38,7 @@ namespace PSLovers2.Services
                 if (CachedFavorites == null || CachedFavorites.Count == 0)
                 {
                     var tmp = Ctx.FavoriteForUsers.Include(x=>x.Favorite).Where(x => x.UserId == user.Id).ToList();
-                    CachedFavorites = tmp.Select(x => ReturnTupleFromFav(x.Favorite)).ToHashSet();
+                    CachedFavorites = tmp.Select(x => ReturnTupleFromFav(x)).ToHashSet();
                 }
             }
             return CachedFavorites;
@@ -90,9 +90,10 @@ namespace PSLovers2.Services
                     favId = favorite.Id;
                 }
                 int favForUserId;
-                if(!Ctx.FavoriteForUsers.Any(x=>x.UserId==user.Id && x.FavoriteId == favId))
+                FavoriteForUser ffu;
+                if (!Ctx.FavoriteForUsers.Any(x=>x.UserId==user.Id && x.FavoriteId == favId))
                 {
-                    var ffu = new FavoriteForUser()
+                    ffu = new FavoriteForUser()
                     {
                         FavoriteId = favId,
                         LastUpdateTime = DateTime.Now,
@@ -104,11 +105,12 @@ namespace PSLovers2.Services
                 }
                 else
                 {
-                    favForUserId = Ctx.FavoriteForUsers.FirstOrDefault(x => x.UserId == user.Id && x.FavoriteId == favId).Id;
+                    ffu = Ctx.FavoriteForUsers.FirstOrDefault(x => x.UserId == user.Id && x.FavoriteId == favId);
+                    favForUserId = ffu.Id;
                 }
                 
                 output.Result = favForUserId;
-                CachedFavorites.Add(ReturnTupleFromFav(favorite));
+                CachedFavorites.Add(ReturnTupleFromFav(ffu));
 
                 
 
@@ -127,7 +129,7 @@ namespace PSLovers2.Services
             {
                 IdentityUser user = await UserManager.FindByEmailAsync(email).ConfigureAwait(false);
                 FavoriteForUser favorite = await Ctx.FavoriteForUsers.FindAsync(favoriteId).ConfigureAwait(false);
-                (string, int, string) tmp = ReturnTupleFromFav(favorite.Favorite);
+                (string, int, string) tmp = ReturnTupleFromFav(favorite);
 
                 if (favorite.UserId == user.Id)
                 {
