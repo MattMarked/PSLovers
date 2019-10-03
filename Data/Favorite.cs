@@ -25,6 +25,7 @@ namespace PSLovers2.Data
         public string ApiCountry { get; set; }
         public int DiscountPercentage { get; set; }       
         public DateTime? DiscountedUntil { get; set; }
+        public DateTime? LastUpdateTime { get; set; }
         public virtual ICollection<IdentityUser> Users { get; set; }
         
 
@@ -47,6 +48,7 @@ namespace PSLovers2.Data
             ApiLanguage = lang;
             ApiCountry = country;            
             DiscountedUntil = game.DiscountedUntil;
+            LastUpdateTime = DateTime.UtcNow;
         }
 
     }

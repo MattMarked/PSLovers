@@ -17,7 +17,6 @@ namespace PSLovers2.Data
         public bool Owned { get; set; }        
         public IdentityUser User { get; set; }
         [ForeignKey("UserId")] public string UserId { get; set; }
-        public DateTime? LastUpdateTime { get; set; }
 
         public FavoriteForUser()
         {

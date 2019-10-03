@@ -1,4 +1,4 @@
-﻿@page "/deals/"
+﻿@page "/"
 @using PSLovers2.Data;
 @using PSLovers2.Services;
 
@@ -8,7 +8,7 @@
 
 
 <h1>Hello, PSLovers!</h1>
-<h2>Deals of the week!</h2>
+<h2>Last price drop, ordered by % discount amount</h2>
 <div class="row">
     @if (games != null && games.Any() && !IsLoading)
     {
@@ -51,7 +51,7 @@
         fetchService.Initialize("IT", "it");
         IsLoading = true;
         StateHasChanged();
-        var serviceOutput = await fetchService.DealsOfTheWeek();
+        var serviceOutput = await fetchService.LastPriceDrops();
         if (serviceOutput.Success)
         {
             games = serviceOutput.Result;

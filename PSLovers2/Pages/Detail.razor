@@ -47,13 +47,17 @@
                     </p>
                 </div>
             </div>
-            <div class="card my-2">
-                <div class="card-body">
-                    <NavLink class="btn btn-info" href="search">
-                        <span class="oi oi-magnifying-glass" aria-hidden="true"></span> Go back to your last search
-                    </NavLink>
+            @if (!String.IsNullOrEmpty(AppState.LastQuery))
+            {
+                <div class="card my-2">
+                    <div class="card-body">
+                        <NavLink class="btn btn-info" href="search">
+                            <span class="oi oi-magnifying-glass" aria-hidden="true"></span> Go back to your last search
+                        </NavLink>
+                    </div>
                 </div>
-            </div>
+            }
+
 
         </div>
         <div class="col-lg-8 col-md-6 ">

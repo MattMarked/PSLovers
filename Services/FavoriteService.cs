@@ -96,7 +96,7 @@ namespace PSLovers2.Services
                     ffu = new FavoriteForUser()
                     {
                         FavoriteId = favId,
-                        LastUpdateTime = DateTime.Now,
+                   
                         UserId = user.Id
                     };
                     Ctx.FavoriteForUsers.Add(ffu);

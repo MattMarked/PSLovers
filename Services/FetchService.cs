@@ -27,17 +27,13 @@ namespace PSLovers2.Services
             Lang = lang;
             ContentType = contentType ?? 2;
         }
-
         public void CheckLanguageAndCountry()
         {
             if (String.IsNullOrEmpty(Country) || String.IsNullOrEmpty(Lang))
                 throw new Exception("Initialize service First");
         }
-
-
         public async Task<ServiceOutput<GameDetail>> FetchGameDetails(string gameId, string gameUrl)
         {
-            CheckLanguageAndCountry();
             var output = new ServiceOutput<GameDetail>();
             if (CachedGameDetails.ContainsKey(gameId) && (CachedGameDetails[gameId].Item1.AddMinutes(15) > DateTime.UtcNow))
             {
@@ -50,6 +46,8 @@ namespace PSLovers2.Services
                 using var httpClient = new HttpClient() { BaseAddress = new Uri(Url) };
                 try
                 {
+                    CheckLanguageAndCountry();
+
                     var encoded = HttpUtility.UrlEncode(gameId);
                     HttpResponseMessage request = await httpClient.GetAsync($"{encoded}");
                     var payload = await request.Content.ReadAsStringAsync();
@@ -57,7 +55,15 @@ namespace PSLovers2.Services
                     {
                         json_game_detail response = JsonConvert.DeserializeObject<json_game_detail>(payload);
                         output.Result = new GameDetail(response, Url+encoded);
-                        CachedGameDetails.Add(gameId, new Tuple<DateTime, GameDetail>(DateTime.UtcNow, output.Result));
+                        if (CachedGameDetails.ContainsKey(gameId))
+                        {
+                            CachedGameDetails[gameId] = new Tuple<DateTime, GameDetail>(DateTime.UtcNow, output.Result);
+                        }
+                        else
+                        {
+                            CachedGameDetails.Add(gameId, new Tuple<DateTime, GameDetail>(DateTime.UtcNow, output.Result));
+
+                        }
                     }
                     else
                     {
@@ -80,6 +86,7 @@ namespace PSLovers2.Services
             {
                 try
                 {
+                    CheckLanguageAndCountry();
                     var encoded = HttpUtility.UrlEncode(query);
                     HttpResponseMessage request = await httpClient.GetAsync($"{encoded}?size=9999&start=0");
                     var payload = await request.Content.ReadAsStringAsync();
@@ -123,19 +130,57 @@ namespace PSLovers2.Services
         }
         public async Task<ServiceOutput<IEnumerable<Game>>> DealsOfTheWeek()
         {
-            CheckLanguageAndCountry();
             var output = new ServiceOutput<IEnumerable<Game>>();
 
-            Url = "https://store.playstation.com/valkyrie-api/" + Country + "/" + Lang + "/19/container/STORE-MSF75508-DOTW2";
+            Url = "https://store.playstation.com/valkyrie-api/" + Country + "/" + Lang + "/19/container/STORE-MSF75508-DOTW1";
             using var httpClient = new HttpClient() { BaseAddress = new Uri(Url) };
             try
             {
+                CheckLanguageAndCountry();
                 HttpResponseMessage request = await httpClient.GetAsync($"?size=30&bucket=games&start=0");
                 var payload = await request.Content.ReadAsStringAsync();
                 if (request.IsSuccessStatusCode)
                 {
                     dealoftheweek_json response = JsonConvert.DeserializeObject<dealoftheweek_json>(payload);
                     if(response != null)
+                    {
+                        output.Result = await YieldGameDetail(response.data).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        ServiceFailed(output, $"API call failed: {payload}");
+                    }
+                    //output.Result = new GameDetail(response, gameUrl);
+                    //CachedGameDetails.Add(gameId, new Tuple<DateTime, GameDetail>(DateTime.UtcNow, output.Result));
+                }
+                else
+                {
+                    ServiceFailed(output, $"API call failed: {payload}");
+                }
+            }
+            catch (Exception ex)
+            {
+                ServiceFailed(output, ex);
+            }
+
+
+            return output;
+        }
+        public async Task<ServiceOutput<IEnumerable<Game>>> LastPriceDrops()
+        {
+            var output = new ServiceOutput<IEnumerable<Game>>();
+
+            Url = "https://store.playstation.com/valkyrie-api/" + Country + "/" + Lang + "/19/container/STORE-MSF75508-PRICEDROPSCHI";
+            using var httpClient = new HttpClient() { BaseAddress = new Uri(Url) };
+            try
+            {
+                CheckLanguageAndCountry();
+                HttpResponseMessage request = await httpClient.GetAsync($"?size=30&bucket=games&start=0");
+                var payload = await request.Content.ReadAsStringAsync();
+                if (request.IsSuccessStatusCode)
+                {
+                    dealoftheweek_json response = JsonConvert.DeserializeObject<dealoftheweek_json>(payload);
+                    if (response != null)
                     {
                         output.Result = await YieldGameDetail(response.data).ConfigureAwait(false);
                     }

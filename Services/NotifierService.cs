@@ -37,11 +37,11 @@ namespace PSLovers2.Services
             var user = await UserManager.FindByEmailAsync(email);
             if(user != null)
             {
-                //var favIds = Ctx.FavoriteForUsers.Where(x => x.UserId == user.Id).Select(x=>new { x.GameId, x.GameUrl, x.ApiCountry, x.ApiLanguage });
-                //foreach (var item in favIds)
-                //{
+                var favIds = Ctx.FavoriteForUsers.Where(x => x.UserId == user.Id && !x.Owned ).Select(x=>new { x.Favorite });
+                foreach (var item in favIds)
+                {
                     
-                //}
+                }
 
             }
 
