@@ -17,19 +17,19 @@ namespace PSLovers2.Services
         private ApplicationDbContext Ctx { get; set; }
         private UserManager<IdentityUser> UserManager { get; set; }
         private FetchService FetchService { get; set; }
-        private HashSet<(string GameId, int FavoriteId, string GameUrl)> CachedFavorites { get; set; }
+        private HashSet<(string GameId, int FavoriteId, string GameUrl, DateTime? LastUpdate)> CachedFavorites { get; set; }
 
         public FavoriteService(ApplicationDbContext context, UserManager<IdentityUser> manager, FetchService fetchService)
         {
             Ctx = context;
             UserManager = manager;
             FetchService = fetchService;
-            CachedFavorites = new HashSet<(string GameId, int FavoriteId, string GameUrl)>();
+            CachedFavorites = new HashSet<(string GameId, int FavoriteId, string GameUrl, DateTime? LastUpdate)>();
         }
 
-        private (string, int, string) ReturnTupleFromFav(FavoriteForUser ffu) => (ffu.Favorite.GameId, ffu.Id, ffu.Favorite.GameUrl);
+        private (string, int, string, DateTime?) ReturnTupleFromFav(FavoriteForUser ffu) => (ffu.Favorite.GameId, ffu.Id, ffu.Favorite.GameUrl, ffu.Favorite.LastUpdateTime);
 
-        public async ValueTask<HashSet<(string GameId, int FavoriteId, string GameUrl)>> FavoriteForUser(string email)
+        public async ValueTask<HashSet<(string GameId, int FavoriteId, string GameUrl, DateTime? LastUpdate)>> FavoriteForUser(string email)
         {
 
             IdentityUser user = await UserManager.FindByEmailAsync(email).ConfigureAwait(false);
@@ -47,7 +47,7 @@ namespace PSLovers2.Services
         public async Task<ServiceOutput<int>> IsFavorite(string gameId, string email)
         {
 
-            HashSet<(string GameId, int FavoriteId, string GameUrl)> favorites = await FavoriteForUser(email).ConfigureAwait(false);
+            HashSet<(string GameId, int FavoriteId, string GameUrl, DateTime? lastUpdate)> favorites = await FavoriteForUser(email).ConfigureAwait(false);
             var output = new ServiceOutput<int>();
             try
             {
@@ -129,7 +129,7 @@ namespace PSLovers2.Services
             {
                 IdentityUser user = await UserManager.FindByEmailAsync(email).ConfigureAwait(false);
                 FavoriteForUser favorite = await Ctx.FavoriteForUsers.FindAsync(favoriteId).ConfigureAwait(false);
-                (string, int, string) tmp = ReturnTupleFromFav(favorite);
+                (string, int, string, DateTime?) tmp = ReturnTupleFromFav(favorite);
 
                 if (favorite.UserId == user.Id)
                 {
@@ -184,10 +184,10 @@ namespace PSLovers2.Services
             var output = new ServiceOutput<List<Favorite>>();
             try
             {
-                HashSet<(string GameId, int FavoriteId, string GameUrl)> idList = await FavoriteForUser(email).ConfigureAwait(false);
+                HashSet<(string GameId, int FavoriteId, string GameUrl, DateTime? lastUpdate)> idList = await FavoriteForUser(email).ConfigureAwait(false);
                 IdentityUser user = await UserManager.FindByEmailAsync(email).ConfigureAwait(false);
                 var gameList = new List<Favorite>();
-                foreach ((var GameId, var FavoriteId, var GameUrl) in idList)
+                foreach ((var GameId, var FavoriteId, var GameUrl, DateTime? lastUpdate) in idList)
                 {
                     ServiceOutput<GameDetail> serviceOutput = await FetchService.FetchGameDetails(GameId, GameUrl).ConfigureAwait(false);
                     if (serviceOutput.Success)
